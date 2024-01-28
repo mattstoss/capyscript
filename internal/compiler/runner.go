@@ -3,26 +3,39 @@ package compiler
 import (
 	"errors"
 	"fmt"
-	"io"
 )
 
 type Opts struct {
+}
+
+type Reader interface {
+	HasNext() bool
+	Next() (string, error)
 }
 
 func NewOpts(args []string) (Opts, error) {
 	return Opts{}, nil
 }
 
-func NewReader(opts Opts) (io.Reader, error) {
+func NewReader(opts Opts) (Reader, error) {
 	return nil, errors.New("Not implemented")
 }
 
-func Run(r io.Reader, opts Opts) error {
-	bytes, err := io.ReadAll(r)
+func Run(reader Reader, opts Opts) error {
+	for reader.HasNext() {
+		err := doRun(reader, opts)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func doRun(reader Reader, opts Opts) error {
+	input, err := reader.Next()
 	if err != nil {
 		return errors.New("Failed to read")
 	}
-	input := string(bytes)
 	tokens, err := Scan(input)
 	if err != nil {
 		return err
