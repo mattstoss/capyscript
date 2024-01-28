@@ -1,23 +1,21 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"os"
 
 	"github.com/mattstoss/capyscript/internal/compiler"
 )
 
 func main() {
-	opts, err := compiler.NewOpts(os.Args)
+	opts, err := compiler.ParseOpts(os.Args)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
-	reader, err := compiler.NewReader(opts)
+	err = compiler.Run(opts)
 	if err != nil {
-		log.Fatal(err)
-	}
-	err = compiler.Run(reader, opts)
-	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }
