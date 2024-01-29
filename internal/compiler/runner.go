@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"unicode/utf8"
 )
 
 type Opts struct {
@@ -33,13 +34,26 @@ func Run(opts Opts) error {
 	if err != nil {
 		return errors.New("Failed to read")
 	}
-	input := string(bytes)
-	tokens, err := Scan(input)
+	runes, err := bytesToRunes(bytes)
+	if err != nil {
+		return err
+	}
+	tokens, err := Scan(runes)
 	if err != nil {
 		return err
 	}
 	if opts.RunMode == "debug_scanner" {
-		fmt.Println(tokens)
+		fmt.Printf("\nSuccessfully parsed %d tokens!\n\n", len(tokens))
+		for i, t := range tokens {
+			if t.Literal != nil {
+				fmt.Printf("\t%5d | %-12s | %v\n", i, t.Type, t.Literal)
+			} else if t.Type == Identifier {
+				fmt.Printf("\t%5d | %-12s | %v\n", i, t.Type, t.Lexeme)
+			} else {
+				fmt.Printf("\t%5d | %-12s |\n", i, t.Type)
+			}
+		}
+		fmt.Println()
 		return nil
 	}
 	node, err := Parse(tokens)
@@ -110,4 +124,17 @@ func parseRunOpts(args []string) (Opts, error) {
 		RunMode: runMode,
 	}
 	return runOpts, nil
+}
+
+func bytesToRunes(b []byte) ([]rune, error) {
+	var runes []rune
+	for len(b) > 0 {
+		r, size := utf8.DecodeRune(b)
+		if r == utf8.RuneError {
+			return runes, errors.New("Failed to decode input")
+		}
+		runes = append(runes, r)
+		b = b[size:]
+	}
+	return runes, nil
 }

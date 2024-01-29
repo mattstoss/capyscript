@@ -1,4 +1,5 @@
 fn main() {
     a := 3
-    print a
+    b := a + 2
+    print b
 }
